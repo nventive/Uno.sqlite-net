@@ -1286,7 +1286,7 @@ namespace SQLite
 		}
 	}
 
-	class SQLiteConnectionPool
+	internal class SQLiteConnectionPool
 	{
 		class Entry
 		{

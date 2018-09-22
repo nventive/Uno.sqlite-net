@@ -1,0 +1,75 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<DefineConstants>$(DefineConstants);__WASM__;NO_VB</DefineConstants>
+		<OutputType>Exe</OutputType>
+		<MonoWasmSDKUri>https://jenkins.mono-project.com/job/test-mono-mainline-wasm/1044/label=ubuntu-1804-amd64/Azure/processDownloadRequest/1044/ubuntu-1804-amd64/sdks/wasm/mono-wasm-16dec74edef.zip</MonoWasmSDKUri>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<EmbeddedResource Include="WasmCSS\*.css" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Remove="bin\**" />
+	  <EmbeddedResource Remove="bin\**" />
+	  <None Remove="bin\**" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<LinkerDescriptor Include="LinkerConfig.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+    <PackageReference Include="NUnitLite" Version="3.10.0" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.48" />
+    <PackageReference Include="Uno.sqlite-wasm" Version="1.0.0-dev.692" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TestDb.cs" />
+    <Compile Include="..\DateTimeTest.cs" />
+    <!--<Compile Include="..\AsyncTests.cs" />
+    <Compile Include="..\BooleanTest.cs" />
+    <Compile Include="..\ByteArrayTest.cs" />
+    <Compile Include="..\CollateTest.cs" />
+    <Compile Include="..\ContainsTest.cs" />
+    <Compile Include="..\CreateTableImplicitTest.cs" />
+    <Compile Include="..\CreateTableTest.cs" />
+    <Compile Include="..\DateTimeOffsetTest.cs" />
+    <Compile Include="..\DeleteTest.cs" />
+    <Compile Include="..\DropTableTest.cs" />
+    <Compile Include="..\EnumCacheTest.cs" />
+    <Compile Include="..\EnumTest.cs" />
+    <Compile Include="..\EqualsTest.cs" />
+    <Compile Include="..\ExceptionAssert.cs" />
+    <Compile Include="..\GuidTests.cs" />
+    <Compile Include="..\IgnoreTest.cs" />
+    <Compile Include="..\InheritanceTest.cs" />
+    <Compile Include="..\InsertTest.cs" />
+    <Compile Include="..\JoinTest.cs" />
+    <Compile Include="..\LinqTest.cs" />
+    <Compile Include="..\MappingTest.cs" />
+    <Compile Include="..\MigrationTest.cs" />
+    <Compile Include="..\NotNullAttributeTest.cs" />
+    <Compile Include="..\NullableTest.cs" />
+    <Compile Include="..\OpenTests.cs" />
+    <Compile Include="..\ScalarTest.cs" />
+    <Compile Include="..\SkipTest.cs" />
+    <Compile Include="..\StringQueryTest.cs" />
+    <Compile Include="..\TableChangedTest.cs" />
+    <Compile Include="..\TransactionTest.cs" />
+    <Compile Include="..\UnicodeTest.cs" />
+    <Compile Include="..\UniqueTest.cs" />
+    <Compile Include="..\ConcurrencyTest.cs">
+      <Link>ConcurrencyTest.cs</Link>
+    </Compile>-->
+  </ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\nuget\SQLite-net-wasm\SQLite-net-wasm.csproj" />
+	</ItemGroup>
+
+</Project>

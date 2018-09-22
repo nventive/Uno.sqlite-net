@@ -45,7 +45,7 @@ namespace SQLite.Tests
             Assert.AreEqual(2, item.Id);
         }
 
-		[Test, ExpectedException (typeof(AssertionException))]
+		[Test] //, ExpectedException (typeof(AssertionException))]
         public void WithoutImplicitMapping ()
         {
             var db = new TestDb ();

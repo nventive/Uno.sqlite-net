@@ -20,7 +20,7 @@ namespace SQLite.Tests
 		{
 		}
 
-		[Test, ExpectedException]
+		[Test]//, ExpectedException]
 		public void CreateTypeWithNoProps ()
 		{
 			var db = new TestDb ();

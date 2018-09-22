@@ -1,3 +1,5 @@
+﻿#pragma warning disable IDE0011 // Add braces
+
 //
 // Copyright (c) 2009-2018 Krueger Systems, Inc.
 //
@@ -42,12 +44,17 @@ using Sqlite3DatabaseHandle = Community.CsharpSqlite.Sqlite3.sqlite3;
 using Sqlite3Statement = Community.CsharpSqlite.Sqlite3.Vdbe;
 #elif USE_WP8_NATIVE_SQLITE
 using Sqlite3 = Sqlite.Sqlite3;
-using Sqlite3DatabaseHandle = Sqlite.Database;
+using Sqlite3DatabaseHandle = SQLiteNative.Database;
 using Sqlite3Statement = Sqlite.Statement;
 #elif USE_SQLITEPCL_RAW
 using Sqlite3DatabaseHandle = SQLitePCL.sqlite3;
 using Sqlite3Statement = SQLitePCL.sqlite3_stmt;
 using Sqlite3 = SQLitePCL.raw;
+#elif WEBASSEMBLY1_0
+using Sqlite3DatabaseHandle = System.Int32;
+using Sqlite3Statement = System.Int32;
+using WebAssembly;
+using System.IO;
 #else
 using Sqlite3DatabaseHandle = System.IntPtr;
 using Sqlite3Statement = System.IntPtr;
@@ -271,7 +278,7 @@ namespace SQLite
 
 			Sqlite3DatabaseHandle handle;
 
-#if SILVERLIGHT || USE_CSHARP_SQLITE || USE_SQLITEPCL_RAW
+#if SILVERLIGHT || USE_CSHARP_SQLITE || USE_SQLITEPCL_RAW || WEBASSEMBLY1_0
 			var r = SQLite3.Open (databasePath, out handle, (int)openFlags, IntPtr.Zero);
 #else
 			// open using the byte[]
@@ -1358,7 +1365,7 @@ namespace SQLite
 #elif SILVERLIGHT
 						_transactionDepth = depth;
 #else
-                        Thread.VolatileWrite (ref _transactionDepth, depth);
+						Thread.VolatileWrite (ref _transactionDepth, depth);
 #endif
 						Execute (cmd + savepoint);
 						return;
@@ -2384,7 +2391,7 @@ namespace SQLite
 		}
 	}
 
-	class EnumCacheInfo
+	internal class EnumCacheInfo
 	{
 		public EnumCacheInfo (Type type)
 		{
@@ -2411,7 +2418,7 @@ namespace SQLite
 		public Dictionary<int, string> EnumValues { get; private set; }
 	}
 
-	static class EnumCache
+	internal static class EnumCache
 	{
 		static readonly Dictionary<Type, EnumCacheInfo> Cache = new Dictionary<Type, EnumCacheInfo> ();
 
@@ -2939,18 +2946,18 @@ namespace SQLite
 					var text = SQLite3.ColumnString (stmt, index);
 					return new Guid (text);
 				}
-                else if (clrType == typeof(Uri)) {
-                    var text = SQLite3.ColumnString(stmt, index);
-                    return new Uri(text);
-                }
+				else if (clrType == typeof(Uri)) {
+					var text = SQLite3.ColumnString(stmt, index);
+					return new Uri(text);
+				}
 				else if (clrType == typeof (StringBuilder)) {
 					var text = SQLite3.ColumnString (stmt, index);
 					return new StringBuilder (text);
 				}
 				else if (clrType == typeof(UriBuilder)) {
-                    var text = SQLite3.ColumnString(stmt, index);
-                    return new UriBuilder(text);
-                }
+					var text = SQLite3.ColumnString(stmt, index);
+					return new UriBuilder(text);
+				}
 				else {
 					throw new NotSupportedException ("Don't know how to read " + clrType);
 				}
@@ -3814,7 +3821,7 @@ namespace SQLite
 
 		const string LibraryPath = "sqlite3";
 
-#if !USE_CSHARP_SQLITE && !USE_WP8_NATIVE_SQLITE && !USE_SQLITEPCL_RAW
+#if !USE_CSHARP_SQLITE && !USE_WP8_NATIVE_SQLITE && !USE_SQLITEPCL_RAW && !WEBASSEMBLY1_0
 		[DllImport(LibraryPath, EntryPoint = "sqlite3_threadsafe", CallingConvention=CallingConvention.Cdecl)]
 		public static extern int Threadsafe ();
 
@@ -3872,7 +3879,7 @@ namespace SQLite
             byte[] queryBytes = System.Text.UTF8Encoding.UTF8.GetBytes (query);
             var r = Prepare2 (db, queryBytes, queryBytes.Length, out stmt, IntPtr.Zero);
 #else
-            var r = Prepare2 (db, query, System.Text.UTF8Encoding.UTF8.GetByteCount (query), out stmt, IntPtr.Zero);
+			var r = Prepare2 (db, query, System.Text.UTF8Encoding.UTF8.GetByteCount (query), out stmt, IntPtr.Zero);
 #endif
 			if (r != Result.OK) {
 				throw SQLiteException.New (r, GetErrmsg (db));
@@ -3977,6 +3984,315 @@ namespace SQLite
 
 		[DllImport (LibraryPath, EntryPoint = "sqlite3_libversion_number", CallingConvention = CallingConvention.Cdecl)]
 		public static extern int LibVersionNumber ();
+
+
+#elif WEBASSEMBLY1_0
+		public static Result Open(string filename, out Sqlite3DatabaseHandle db)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteOpen(\"{filename}\")");
+
+			var parts = res.Split(';');
+
+			if (parts.Length == 2
+				&& int.TryParse(parts[0], out var code)
+				&& int.TryParse(parts[1], out var pDb)
+			)
+			{
+				db = pDb;
+				return (Result)code;
+			}
+
+
+			db = 0;
+			return Result.Error;
+		}
+
+		public static Result Open(string filename, out Sqlite3DatabaseHandle db, int flags, IntPtr zVfs)
+		{
+			return Open(filename, out db);
+		}
+
+		public static Result Close(Sqlite3DatabaseHandle db)
+			=> Close2(db);
+
+		public static Result Close2(Sqlite3DatabaseHandle db)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteClose2({db})");
+
+			if (int.TryParse(res, out var result))
+			{
+				return (Result)result;
+			}
+
+			return Result.Error;
+		}
+
+		public static Result BusyTimeout(Sqlite3DatabaseHandle db, int milliseconds)
+		{
+			// throw new NotImplementedException();
+			// return (Result)Sqlite3.sqlite3_busy_timeout(db, milliseconds);
+			return Result.OK;
+		}
+
+		public static int Changes(Sqlite3DatabaseHandle db)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteChanges({db})");
+
+			if (int.TryParse(res, out var count))
+			{
+				return count;
+			}
+
+			throw new InvalidOperationException($"Invalid changes count {res}");
+		}
+
+		public static Sqlite3Statement Prepare2(Sqlite3DatabaseHandle db, string query)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqlitePrepare2({db}, \"{Runtime.EscapeJs(query)}\")");
+
+			var parts = res.Split(';');
+
+			if (parts.Length == 2
+				&& int.TryParse(parts[0], out var code)
+				&& int.TryParse(parts[1], out var pStatement)
+			)
+			{
+				if (code != 0)
+				{
+					throw SQLiteException.New((Result)code, GetErrmsg(db));
+				}
+
+				return pStatement;
+			}
+
+			throw new InvalidOperationException($"Invalid statement id {res}");
+		}
+
+		public static Result Step(Sqlite3Statement stmt)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteStep({stmt})");
+
+			if (int.TryParse(res, out var value))
+			{
+				return (Result)value;
+			}
+
+			return Result.Error;
+		}
+
+		public static Result Reset(Sqlite3Statement stmt)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteReset({stmt})");
+
+			if (bool.TryParse(res, out var value))
+			{
+				return value ? Result.OK : Result.Error;
+			}
+
+			return Result.Error;
+		}
+
+		public static Result Finalize(Sqlite3Statement stmt)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteFinalize({stmt})");
+
+			if (bool.TryParse(res, out var value))
+			{
+				return value ? Result.OK : Result.Error;
+			}
+
+			return Result.Error;
+		}
+
+		public static long LastInsertRowid(Sqlite3DatabaseHandle db)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteLastInsertRowid({db})");
+
+			if (int.TryParse(res, out var count))
+			{
+				return count;
+			}
+
+			throw new InvalidOperationException($"Invalid row if {res}");
+		}
+
+		public static string GetErrmsg(Sqlite3DatabaseHandle db)
+			=> Runtime.InvokeJS($"SQLiteNet.sqliteErrMsg({db})");
+
+		public static int BindParameterIndex(Sqlite3Statement stmt, string name)
+			=> InvokeJSInt($"SQLiteNet.sqliteBindParameterIndex({stmt}, \"{name}\")");
+
+		public static Result BindNull(Sqlite3Statement stmt, int index)
+			=> InvokeJS($"SQLiteNet.sqliteBindNull({stmt}, {index})");
+
+		public static Result BindInt(Sqlite3Statement stmt, int index, int val)
+			=> InvokeJS($"SQLiteNet.sqliteBindInt({stmt}, {index}, {val})");
+
+		public static Result BindInt64(Sqlite3Statement stmt, int index, long val) 
+			=> InvokeJS($"SQLiteNet.sqliteBindInt64({stmt}, {index}, {val})");
+
+		public static Result BindDouble(Sqlite3Statement stmt, int index, double val) 
+			=> InvokeJS($"SQLiteNet.sqliteBindDouble({stmt}, {index}, {val})");
+
+		public static Result BindText(Sqlite3Statement stmt, int index, string val, int n, IntPtr free)
+			=> InvokeJS($"SQLiteNet.sqliteBindText({stmt}, {index}, \"{Runtime.EscapeJs(val)}\")");
+
+		public static Result BindBlob(Sqlite3Statement stmt, int index, byte[] val, int n, IntPtr free)
+		{
+			var gch = GCHandle.Alloc(val, GCHandleType.Pinned);
+
+			try
+			{
+				var pinnedData = gch.AddrOfPinnedObject();
+
+				return InvokeJS($"SQLiteNet.sqliteBindBlob({stmt}, {index}, {pinnedData}, {n})");
+			}
+			finally
+			{
+				gch.Free();
+			}
+		}
+
+		public static int ColumnCount(Sqlite3Statement stmt)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteColumnCount({stmt})");
+
+			if (int.TryParse(res, out var count))
+			{
+				return count;
+			}
+
+			throw new InvalidOperationException($"Invalid count {res}");
+		}
+
+		public static string ColumnName(Sqlite3Statement stmt, int index) 
+			=> ColumnName16(stmt, index);
+
+		public static string ColumnName16(Sqlite3Statement stmt, int index) 
+			=> Runtime.InvokeJS($"SQLiteNet.sqliteColumnName({stmt}, {index})");
+
+		public static ColType ColumnType(Sqlite3Statement stmt, int index)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteColumnType({stmt}, {index})");
+
+			if (int.TryParse(res, out var colType))
+			{
+				return (ColType)colType;
+			}
+
+			throw new InvalidOperationException($"The column type {res} is not supported");
+		}
+
+		public static int ColumnInt(Sqlite3Statement stmt, int index)
+		{
+			var res = Runtime.InvokeJS($"SQLiteNet.sqliteColumnInt({stmt}, {index})");
+
+			if (int.TryParse(res, out var value))
+			{
+				return value;
+			}
+
+			throw new InvalidOperationException($"Unsupported value {res}");
+		}
+
+		public static long ColumnInt64(Sqlite3Statement stmt, int index)
+		{
+			throw new NotImplementedException();
+			// return Sqlite3.sqlite3_column_int64(stmt, index);
+		}
+
+		public static double ColumnDouble(Sqlite3Statement stmt, int index)
+		{
+			throw new NotImplementedException();
+			// return Sqlite3.sqlite3_column_double(stmt, index);
+		}
+
+		public static string ColumnText(Sqlite3Statement stmt, int index)
+		{
+			return Runtime.InvokeJS($"SQLiteNet.sqliteColumnText({stmt}, {index})");
+		}
+
+		public static string ColumnText16(Sqlite3Statement stmt, int index)
+		{
+			throw new NotImplementedException();
+			// return Sqlite3.sqlite3_column_text(stmt, index);
+		}
+
+		public static byte[] ColumnBlob(Sqlite3Statement stmt, int index)
+		{
+			throw new NotImplementedException();
+			// return Sqlite3.sqlite3_column_blob(stmt, index);
+		}
+
+		public static int ColumnBytes(Sqlite3Statement stmt, int index)
+		{
+			throw new NotImplementedException();
+			// return Sqlite3.sqlite3_column_bytes(stmt, index);
+		}
+
+		public static string ColumnString(Sqlite3Statement stmt, int index)
+		{
+			return Runtime.InvokeJS($"SQLiteNet.sqliteColumnString({stmt}, {index})");
+		}
+
+		public static byte[] ColumnByteArray(Sqlite3Statement stmt, int index)
+		{
+			int length = ColumnBytes(stmt, index);
+			if (length > 0)
+			{
+				return ColumnBlob(stmt, index);
+			}
+			return new byte[0];
+		}
+
+		public static Result EnableLoadExtension(Sqlite3DatabaseHandle db, int onoff)
+		{
+			throw new NotImplementedException();
+			// return (Result)Sqlite3.sqlite3_enable_load_extension(db, onoff);
+		}
+
+		public static int LibVersionNumber()
+		{
+			var res = Runtime.InvokeJS("SQLiteNet.sqliteLibVersionNumber();");
+
+			if(int.TryParse(res, out var version))
+			{
+				return version;
+			}
+
+			return 0; 
+		}
+
+		public static ExtendedResult ExtendedErrCode(Sqlite3DatabaseHandle db)
+		{
+			throw new NotImplementedException();
+			// return (ExtendedResult)Sqlite3.sqlite3_extended_errcode(db);
+		}
+
+		private static Result InvokeJS(string statement)
+		{
+			var res = Runtime.InvokeJS(statement);
+
+			if (int.TryParse(res, out var value))
+			{
+				return (Result)value;
+			}
+
+			throw new InvalidOperationException($"Invalid result {res}");
+		}
+
+		private static int InvokeJSInt(string statement)
+		{
+			var res = Runtime.InvokeJS(statement);
+
+			if (int.TryParse(res, out var value))
+			{
+				return value;
+			}
+
+			throw new InvalidOperationException($"Invalid result {res}");
+		}
+
 #else
 		public static Result Open (string filename, out Sqlite3DatabaseHandle db)
 		{
@@ -4194,3 +4510,109 @@ namespace SQLite
 		}
 	}
 }
+
+#if WEBASSEMBLY1_0
+namespace WebAssembly
+{
+	internal sealed class Runtime
+	{
+		[System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.InternalCall)]
+		private static extern string InvokeJS(string str, out int exceptional_result);
+
+		internal static string InvokeJS(string str)
+		{
+			var escaped = str;
+
+			var r = InvokeJS(escaped, out var exceptionResult);
+			if (exceptionResult != 0)
+			{
+				Console.Error.WriteLine($"Error #{exceptionResult} \"{r}\" executing javascript: \"{str}\"");
+			}
+			else
+			{
+				// Console.WriteLine($"InvokeJS: [{str}]: {r}");
+			}
+			return r;
+		}
+
+		public static string EscapeJs(string s)
+		{
+			if (s == null)
+			{
+				return "";
+			}
+
+			bool NeedsEscape(string s2)
+			{
+				for (int i = 0; i < s2.Length; i++)
+				{
+					var c = s2[i];
+
+					if (
+						c > 255
+						|| c < 32
+						|| c == '\\'
+						|| c == '"'
+						|| c == '\r'
+						|| c == '\n'
+						|| c == '\t'
+					)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			if (NeedsEscape(s))
+			{
+				var r = new StringBuilder(s.Length);
+
+				foreach (var c in s)
+				{
+					switch (c)
+					{
+						case '\\':
+							r.Append("\\\\");
+							continue;
+						case '"':
+							r.Append("\\\"");
+							continue;
+						case '\r':
+							continue;
+						case '\n':
+							r.Append("\\n");
+							continue;
+						case '\t':
+							r.Append("\\t");
+							continue;
+					}
+
+					if (c < 32)
+					{
+						continue; // not displayable
+					}
+
+					if (c <= 255)
+					{
+						r.Append(c);
+					}
+					else
+					{
+						r.Append("\\u");
+						r.Append(((ushort)c).ToString("X4"));
+					}
+				}
+
+				return r.ToString();
+			}
+			else
+			{
+				return s;
+			}
+		}
+
+	}
+}
+#endif
