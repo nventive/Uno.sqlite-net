@@ -16,9 +16,9 @@ namespace SQLiteTests
 	{
 		static void Main(string[] args)
 		{
-			try {
-				Console.WriteLine ("Creating runner");
-				// var runner = new NUnitLite.TextRunner();
+			try 
+			{
+				// InternalTrace.Initialize (Console.Out, InternalTraceLevel.Debug);
 
 				var runner = new NUnitTestAssemblyRunner (new DefaultTestAssemblyBuilder ());
 				runner.Load (
@@ -27,19 +27,12 @@ namespace SQLiteTests
 						[FrameworkPackageSettings.NumberOfTestWorkers] = 0,
 						[FrameworkPackageSettings.SynchronousEvents] = true,
 						[FrameworkPackageSettings.RunOnMainThread] = true,
-						//[FrameworkPackageSettings.InternalTraceLevel] = "Verbose",
-						//[FrameworkPackageSettings.InternalTraceWriter] = Console.Out,
 					}
 				);
 
-				Console.WriteLine ("Running tests " + typeof(NUnitTestAssemblyRunner).Assembly.FullName);
-				var r = runner.Run (new TestListener (), TestFilter.Empty);
-				Console.WriteLine (
-				r.Duration);
-
-				Console.WriteLine ("Done tests");
-
-				// BasicTest ();
+				var listener = new TestListener ();
+				var r = runner.Run (listener, TestFilter.Empty);
+				listener.ReportResults (r);
 			}
 			catch(Exception e) {
 				Console.WriteLine (e);
@@ -67,6 +60,23 @@ namespace SQLiteTests
 			public void TestStarted (ITest test)
 			{
 				_textUI.TestStarted (test);
+			}
+
+			public void ReportResults(ITestResult result)
+			{
+				var summary = new ResultSummary (result);
+
+				if (summary.ExplicitCount + summary.SkipCount + summary.IgnoreCount > 0) {
+					_textUI.DisplayNotRunReport (result);
+				}
+
+				if (result.ResultState.Status == TestStatus.Failed || result.ResultState.Status == TestStatus.Warning) {
+					_textUI.DisplayErrorsFailuresAndWarningsReport (result);
+				}
+
+				_textUI.DisplayRunSettings ();
+
+				_textUI.DisplaySummaryReport (summary);
 			}
 		}
 

@@ -38,14 +38,18 @@ namespace SQLite.Tests
 			TestDateTime (db);
 		}
 
+#if !__WASM__
 		[Test]
+#endif
 		public void AsyncAsTicks ()
 		{
 			var db = new SQLiteAsyncConnection (TestPath.GetTempFileName (), true);
 			TestAsyncDateTime (db);
 		}
 
+#if !__WASM__
 		[Test]
+#endif
 		public void AsyncAsString ()
 		{
 			var db = new SQLiteAsyncConnection (TestPath.GetTempFileName (), false);

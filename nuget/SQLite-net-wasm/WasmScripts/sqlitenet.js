@@ -92,7 +92,7 @@ class SQLiteNet {
         return SQLiteNative.Database.column_text(pStatement, index);
     }
 
-    static sqliteColumnInt(pStatement, index) {
+    static sqliteColumnInt(pStatement, index) { 
         return SQLiteNative.Database.column_int(pStatement, index);
     }
 
@@ -109,19 +109,19 @@ class SQLiteNet {
     }
 
     static sqliteBindNull(pStatement, index) {
-        return SQLiteNative.Database.bind_null(index);
+        return SQLiteNative.Database.bind_null(pStatement, index);
     }
 
     static sqliteBindInt(pStatement, index, value) {
-        return SQLiteNative.Database.bind_int(index, value);
+        return SQLiteNative.Database.bind_int(pStatement, index, value);
     }
 
     static sqliteBindInt64(pStatement, index, value) {
-        return SQLiteNative.Database.bind_int64(index, value);
+        return SQLiteNative.Database.bind_int64(pStatement, index, value);
     }
 
     static sqliteBindDouble(pStatement, index, value) {
-        return SQLiteNative.Database.bind_double(index, value);
+        return SQLiteNative.Database.bind_double(pStatement, index, value);
     }
 
 }

@@ -23,16 +23,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="NUnitLite" Version="3.10.0" />
+    <PackageReference Include="NUnitLite" Version="3.10.1" />
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.48" />
-    <PackageReference Include="Uno.sqlite-wasm" Version="1.0.0-dev.692" />
+    <PackageReference Include="Uno.sqlite-wasm" Version="1.0.0-dev.697" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\TestDb.cs" />
-    <Compile Include="..\DateTimeTest.cs" />
-    <!--<Compile Include="..\AsyncTests.cs" />
+    <Compile Include="..\ScalarTest.cs" />
     <Compile Include="..\BooleanTest.cs" />
+    <!--<Compile Include="..\AsyncTests.cs" />
+    <Compile Include="..\DateTimeTest.cs" />
+    <Compile Include="..\OpenTests.cs" />
+    <Compile Include="..\InsertTest.cs" />
     <Compile Include="..\ByteArrayTest.cs" />
     <Compile Include="..\CollateTest.cs" />
     <Compile Include="..\ContainsTest.cs" />
@@ -48,15 +51,12 @@
     <Compile Include="..\GuidTests.cs" />
     <Compile Include="..\IgnoreTest.cs" />
     <Compile Include="..\InheritanceTest.cs" />
-    <Compile Include="..\InsertTest.cs" />
     <Compile Include="..\JoinTest.cs" />
     <Compile Include="..\LinqTest.cs" />
     <Compile Include="..\MappingTest.cs" />
     <Compile Include="..\MigrationTest.cs" />
     <Compile Include="..\NotNullAttributeTest.cs" />
     <Compile Include="..\NullableTest.cs" />
-    <Compile Include="..\OpenTests.cs" />
-    <Compile Include="..\ScalarTest.cs" />
     <Compile Include="..\SkipTest.cs" />
     <Compile Include="..\StringQueryTest.cs" />
     <Compile Include="..\TableChangedTest.cs" />
