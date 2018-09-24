@@ -1,7 +1,27 @@
 
-# SQLite-net
+# WebAssembly port of SQLite-net
 
-[![Build Status](https://app.bitrise.io/app/bf752c26c31aec6c/status.svg?token=puU-yHhMNdAwJUusm9swlA&branch=master)](https://app.bitrise.io/app/bf752c26c31aec6c)
+This repository is a fork of the [SQLite-net](https://github.com/praeclarum/sqlite-net) repository to add support for WebAssembly, using the [Uno.SQLite-wasm](https://github.com/nventive/Uno.sqlite-wasm) package.
+
+This is a work in progress.
+
+## Testing the library
+
+- Open the [SQLite solution](SQLite.sln)
+- Build the `SQLite.Tests.Wasm` project
+- Using WSL, go the `dist` folder that was created in the `bin\Debug` folder
+- Run a web server using `python3 server.py`
+- Navigate to `http://localhost:8000`
+- Observe the results in the browser's debugger window
+
+## TODO
+
+- Make all the tests pass
+- Publish a proper nuget package
+- Integrate the `WebAssembly` TFM when https://github.com/NuGet/NuGet.Client/pull/2159 will be available.
+- Cleanup and merge back to Frank's repo
+
+# Original documentation 
 
 Use one of these packages:
 
