@@ -1,5 +1,6 @@
 ﻿<linker>
   <assembly fullname="SQLite.Tests.Wasm" />
+  <assembly fullname="SQLite-net" />
   <assembly fullname="nunitlite" />
   <assembly fullname="nunit.framework" />
 

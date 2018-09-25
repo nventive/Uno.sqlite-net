@@ -30,13 +30,15 @@
 
   <ItemGroup>
     <Compile Include="..\TestDb.cs" />
-    <Compile Include="..\ScalarTest.cs" />
+    <Compile Include="..\ByteArrayTest.cs" />
+    <!--<Compile Include="..\ScalarTest.cs" />
     <Compile Include="..\BooleanTest.cs" />
+    <Compile Include="..\DateTimeTest.cs" />-->
+    
+    
     <!--<Compile Include="..\AsyncTests.cs" />
-    <Compile Include="..\DateTimeTest.cs" />
     <Compile Include="..\OpenTests.cs" />
     <Compile Include="..\InsertTest.cs" />
-    <Compile Include="..\ByteArrayTest.cs" />
     <Compile Include="..\CollateTest.cs" />
     <Compile Include="..\ContainsTest.cs" />
     <Compile Include="..\CreateTableImplicitTest.cs" />
@@ -68,8 +70,9 @@
     </Compile>-->
   </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\..\nuget\SQLite-net-wasm\SQLite-net-wasm.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\nuget\SQLite-net-base\SQLite-net-base.csproj" />
+    <ProjectReference Include="..\..\nuget\SQLitePCLRaw.provider.wasm\SQLitePCLRaw.provider.wasm.csproj" />
+  </ItemGroup>
 
 </Project>

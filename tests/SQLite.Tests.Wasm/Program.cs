@@ -18,7 +18,9 @@ namespace SQLiteTests
 		{
 			try 
 			{
-				// InternalTrace.Initialize (Console.Out, InternalTraceLevel.Debug);
+				SQLitePCL.raw.SetProvider (new SQLitePCL.SQLite3Provider_WebAssembly ());
+
+				InternalTrace.Initialize (Console.Out, InternalTraceLevel.Debug);
 
 				var runner = new NUnitTestAssemblyRunner (new DefaultTestAssemblyBuilder ());
 				runner.Load (
